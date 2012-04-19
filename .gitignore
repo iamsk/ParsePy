@@ -1,0 +1,3 @@
+*.pyc
+ParsePy.egg-info/
+dist/
