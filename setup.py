@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- encoding:utf-8 -*-
 
+from setuptools import setup
 from setuptools import find_packages
-from distutils.core import setup
 
 setup(
     name='ParsePy',

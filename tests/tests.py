@@ -21,8 +21,7 @@ class TestParseObject(unittest.TestCase):
 
     def test_save(self):
         noti = ParsePy.ParseNotification()
-        data = {'alert': 'hello zhizhe!'}
-        noti.push(data=data)
+        noti.push()
 
 if __name__ == "__main__":
     testsuite = unittest.TestLoader().loadTestsFromTestCase(TestParseObject)
