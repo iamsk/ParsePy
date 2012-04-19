@@ -1,3 +1,4 @@
 *.pyc
 ParsePy.egg-info/
 dist/
+config.py
