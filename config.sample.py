@@ -3,4 +3,4 @@ __author__ = 'iamsk'
 __email__ = 'iamsk.info@gmail.com'
 
 APPLICATION_ID = ""
-MASTER_KEY = ""
+REST_API_KEY = ""

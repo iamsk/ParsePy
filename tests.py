@@ -4,10 +4,10 @@ __email__ = 'iamsk.info@gmail.com'
 
 import unittest
 import ParsePy
-from config import APPLICATION_ID, MASTER_KEY
+from config import APPLICATION_ID, REST_API_KEY
 
 ParsePy.APPLICATION_ID = APPLICATION_ID
-ParsePy.MASTER_KEY = MASTER_KEY
+ParsePy.REST_API_KEY = REST_API_KEY
 
 class TestParseObject(unittest.TestCase):
     def test_save(self):
@@ -19,6 +19,10 @@ class TestParseObject(unittest.TestCase):
         self.assertEqual(gameScore.score, 112358)
         self.assertEqual(type(gameScore.objectId()), unicode)
 
+    def test_save(self):
+        noti = ParsePy.ParseNotification()
+        data = {'alert': 'hello zhizhe!'}
+        noti.push(data=data)
 
 if __name__ == "__main__":
     testsuite = unittest.TestLoader().loadTestsFromTestCase(TestParseObject)

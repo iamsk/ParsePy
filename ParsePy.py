@@ -11,41 +11,34 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib, urllib2
+import urllib
+import urllib2
 import base64
 import json
 import datetime
 import collections
 
-API_ROOT = 'https://api.parse.com/1/classes'
+API_ROOT = 'https://api.parse.com/1'
 
 APPLICATION_ID = ''
-MASTER_KEY = ''
-
+REST_API_KEY = ''
 
 class ParseBinaryDataWrapper(str):
     pass
 
 
 class ParseBase(object):
-    def _executeCall(self, uri, http_verb, data=None):
-        url = API_ROOT + uri
-
+    def _executeCall(self, uri, http_verb, data=None, type='classes'):
+        url = '/'.join([API_ROOT, type, uri]).strip('/')
         request = urllib2.Request(url, data)
-
         request.add_header('Content-type', 'application/json')
-
-        # we could use urllib2's authentication system, but it seems like overkill for this
-        auth_header =  "Basic %s" % base64.b64encode('%s:%s' % (APPLICATION_ID, MASTER_KEY))
-        request.add_header("Authorization", auth_header)
-
+        request.add_header("X-Parse-Application-Id", APPLICATION_ID)
+        request.add_header("X-Parse-REST-API-Key", REST_API_KEY)
         request.get_method = lambda: http_verb
-
         # TODO: add error handling for server response
         response = urllib2.urlopen(request)
         response_body = response.read()
         response_dict = json.loads(response_body)
-
         return response_dict
 
     def _ISO8601ToDatetime(self, date_string):
@@ -84,7 +77,7 @@ class ParseObject(ParseBase):
         # URL: /1/classes/<className>/<objectId>
         # HTTP Verb: DELETE
 
-        uri = '/%s/%s' % (self._class_name, self._object_id)
+        uri = '%s/%s' % (self._class_name, self._object_id)
 
         self._executeCall(uri, 'DELETE')
 
@@ -108,14 +101,14 @@ class ParseObject(ParseBase):
 
         if type(value) == ParseObject:
             value = {'__type': 'Pointer',
-                    'className': value._class_name,
-                    'objectId': value._object_id}
+                     'className': value._class_name,
+                     'objectId': value._object_id}
         elif type(value) == datetime.datetime:
             value = {'__type': 'Date',
-                    'iso': value.isoformat()[:-3] + 'Z'} # take off the last 3 digits and add a Z
+                     'iso': value.isoformat()[:-3] + 'Z'} # take off the last 3 digits and add a Z
         elif type(value) == ParseBinaryDataWrapper:
             value = {'__type': 'Bytes',
-                    'base64': base64.b64encode(value)}
+                     'base64': base64.b64encode(value)}
 
         return (key, value)
 
@@ -135,7 +128,6 @@ class ParseObject(ParseBase):
         return (key, value)
 
     def _getJSONProperties(self):
-
         properties_list = self.__dict__.items()
 
         # filter properties that start with an underscore
@@ -144,7 +136,7 @@ class ParseObject(ParseBase):
         #properties_list = [(key, value) for key, value in self.__dict__.items() if key[0] != '_']
 
         properties_list = map(self._convertToParseType, properties_list)
-        
+
         properties_dict = dict(properties_list)
         json_properties = json.dumps(properties_dict)
 
@@ -154,12 +146,12 @@ class ParseObject(ParseBase):
         # URL: /1/classes/<className>
         # HTTP Verb: POST
 
-        uri = '/%s' % self._class_name
+        uri = '%s' % self._class_name
 
         data = self._getJSONProperties()
 
         response_dict = self._executeCall(uri, 'POST', data)
-        
+
         self._created_at = self._updated_at = response_dict['createdAt']
         self._object_id = response_dict['objectId']
 
@@ -167,7 +159,7 @@ class ParseObject(ParseBase):
         # URL: /1/classes/<className>/<objectId>
         # HTTP Verb: PUT
 
-        uri = '/%s/%s' % (self._class_name, self._object_id)
+        uri = '%s/%s' % (self._class_name, self._object_id)
 
         data = self._getJSONProperties()
 
@@ -192,15 +184,15 @@ class ParseQuery(ParseBase):
     def lt(self, name, value):
         self._where[name]['$lt'] = value
         return self
-        
+
     def lte(self, name, value):
         self._where[name]['$lte'] = value
         return self
-        
+
     def gt(self, name, value):
         self._where[name]['$gt'] = value
         return self
-        
+
     def gte(self, name, value):
         self._where[name]['$gte'] = value
         return self
@@ -229,14 +221,14 @@ class ParseQuery(ParseBase):
     def fetch(self):
         # hide the single_result param of the _fetch method from the library user
         # since it's only useful internally
-        return self._fetch() 
+        return self._fetch()
 
     def _fetch(self, single_result=False):
         # URL: /1/classes/<className>/<objectId>
         # HTTP Verb: GET
 
         if self._object_id:
-            uri = '/%s/%s' % (self._class_name, self._object_id)
+            uri = '%s/%s' % (self._class_name, self._object_id)
         else:
             options = dict(self._options) # make a local copy
             if self._where:
@@ -244,7 +236,7 @@ class ParseQuery(ParseBase):
                 where = json.dumps(self._where)
                 options.update({'where': where})
 
-            uri = '/%s?%s' % (self._class_name, urllib.urlencode(options))
+            uri = '%s?%s' % (self._class_name, urllib.urlencode(options))
 
         response_dict = self._executeCall(uri, 'GET')
 
@@ -252,4 +244,9 @@ class ParseQuery(ParseBase):
             return ParseObject(self._class_name, response_dict)
         else:
             return [ParseObject(self._class_name, result) for result in response_dict['results']]
-                
+
+
+class ParseNotification(ParseBase):
+    def push(self, channel='', type='ios', data={}):
+        post_data = {'channel': channel, 'type': type, 'data': data}
+        self._executeCall('', 'POST', type='push', data=json.dumps(post_data))
