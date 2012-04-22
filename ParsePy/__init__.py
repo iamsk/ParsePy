@@ -247,7 +247,11 @@ class ParseQuery(ParseBase):
 
 
 class ParseNotification(ParseBase):
-    def push(self, channel='', type='ios', alert='nice to meet you, zhihuer!'):
-        data = {'alert': alert}
+    def push(self, channel='', type='ios', data=None):
+        # '' for broadcast
+        # type for device type(ios or android)
+        # data for all alert and self-defined info
+        if type(data) is not dict:
+            return
         post_data = {'channel': channel, 'type': type, 'data': data}
         self._executeCall('', 'POST', type='push', data=json.dumps(post_data))
