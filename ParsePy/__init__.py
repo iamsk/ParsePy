@@ -254,4 +254,5 @@ class ParseNotification(ParseBase):
         if not isinstance(data, dict):
             return
         post_data = {'channel': channel, 'type': type, 'data': data}
-        self._executeCall('', 'POST', type='push', data=json.dumps(post_data))
+        result = self._executeCall('', 'POST', type='push', data=json.dumps(post_data))
+        return result
