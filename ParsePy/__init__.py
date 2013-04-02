@@ -20,20 +20,22 @@ import collections
 
 API_ROOT = 'https://api.parse.com/1'
 
-APPLICATION_ID = ''
-REST_API_KEY = ''
 
 class ParseBinaryDataWrapper(str):
     pass
 
 
 class ParseBase(object):
+    def __init__(self, application_id, rest_api_key):
+        self.application_id = application_id
+        self.rest_api_key = rest_api_key
+
     def _executeCall(self, uri, http_verb, data=None, type='classes'):
         url = '/'.join([API_ROOT, type, uri]).strip('/')
         request = urllib2.Request(url, data)
         request.add_header('Content-type', 'application/json')
-        request.add_header("X-Parse-Application-Id", APPLICATION_ID)
-        request.add_header("X-Parse-REST-API-Key", REST_API_KEY)
+        request.add_header("X-Parse-Application-Id", self.application_id)
+        request.add_header("X-Parse-REST-API-Key", self.rest_api_key)
         request.get_method = lambda: http_verb
         # TODO: add error handling for server response
         response = urllib2.urlopen(request)
@@ -49,7 +51,8 @@ class ParseBase(object):
 
 
 class ParseObject(ParseBase):
-    def __init__(self, class_name, attrs_dict=None):
+    def __init__(self, application_id, rest_api_key, class_name, attrs_dict=None):
+        super(ParseObject, self).__init__(application_id, rest_api_key)
         self._class_name = class_name
         self._object_id = None
         self._updated_at = None
@@ -105,7 +108,7 @@ class ParseObject(ParseBase):
                      'objectId': value._object_id}
         elif type(value) == datetime.datetime:
             value = {'__type': 'Date',
-                     'iso': value.isoformat()[:-3] + 'Z'} # take off the last 3 digits and add a Z
+                     'iso': value.isoformat()[:-3] + 'Z'}  # take off the last 3 digits and add a Z
         elif type(value) == ParseBinaryDataWrapper:
             value = {'__type': 'Bytes',
                      'base64': base64.b64encode(value)}
@@ -115,7 +118,7 @@ class ParseObject(ParseBase):
     def _convertFromParseType(self, prop):
         key, value = prop
 
-        if type(value) == dict and value.has_key('__type'):
+        if type(value) == dict and '__type' in value:
             if value['__type'] == 'Pointer':
                 value = ParseQuery(value['className']).get(value['objectId'])
             elif value['__type'] == 'Date':
@@ -169,7 +172,8 @@ class ParseObject(ParseBase):
 
 
 class ParseQuery(ParseBase):
-    def __init__(self, class_name):
+    def __init__(self, application_id, rest_api_key, class_name):
+        super(ParseObject, self).__init__(application_id, rest_api_key)
         self._class_name = class_name
         self._where = collections.defaultdict(dict)
         self._options = {}
@@ -230,7 +234,7 @@ class ParseQuery(ParseBase):
         if self._object_id:
             uri = '%s/%s' % (self._class_name, self._object_id)
         else:
-            options = dict(self._options) # make a local copy
+            options = dict(self._options)  # make a local copy
             if self._where:
                 # JSON encode WHERE values
                 where = json.dumps(self._where)
