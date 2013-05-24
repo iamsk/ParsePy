@@ -26,9 +26,10 @@ class ParseBinaryDataWrapper(str):
 
 
 class ParseBase(object):
-    def __init__(self, application_id, rest_api_key):
+    def __init__(self, application_id, rest_api_key, timeout=3):
         self.application_id = application_id
         self.rest_api_key = rest_api_key
+        self.timeout = timeout
 
     def _executeCall(self, uri, http_verb, data=None, type='classes'):
         url = '/'.join([API_ROOT, type, uri]).strip('/')
@@ -38,7 +39,7 @@ class ParseBase(object):
         request.add_header("X-Parse-REST-API-Key", self.rest_api_key)
         request.get_method = lambda: http_verb
         # TODO: add error handling for server response
-        response = urllib2.urlopen(request)
+        response = urllib2.urlopen(request, timeout=self.timeout)
         response_body = response.read()
         response_dict = json.loads(response_body)
         return response_dict

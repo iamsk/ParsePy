@@ -6,23 +6,14 @@ import unittest
 import ParsePy
 from config import APPLICATION_ID, REST_API_KEY
 
-ParsePy.APPLICATION_ID = APPLICATION_ID
-ParsePy.REST_API_KEY = REST_API_KEY
 
-class TestParseObject(unittest.TestCase):
-    def test_save(self):
-        gameScore = ParsePy.ParseObject("GameScore")
-        gameScore.score = 112358
-        gameScore.playerName = "S K"
-        gameScore.cheatMode = False
-        gameScore.save()
-        self.assertEqual(gameScore.score, 112358)
-        self.assertEqual(type(gameScore.objectId()), unicode)
-
-    def test_save(self):
-        noti = ParsePy.ParseNotification()
-        noti.push()
+class TestParsePush(unittest.TestCase):
+    def test_push(self):
+        noti = ParsePy.ParseNotification(APPLICATION_ID, REST_API_KEY)
+        channel = 'pm_c55d6c118b9141f20776588b0308e586'
+        data = {'type': 'thread', 'alert': 'test for sending to yourself', 'badge': 1, 'url': ''}
+        noti.push(channel=channel, type='ios', data=data)
 
 if __name__ == "__main__":
-    testsuite = unittest.TestLoader().loadTestsFromTestCase(TestParseObject)
+    testsuite = unittest.TestLoader().loadTestsFromTestCase(TestParsePush)
     unittest.TextTestRunner(verbosity=2).run(testsuite)
