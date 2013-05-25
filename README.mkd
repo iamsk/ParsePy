@@ -10,14 +10,17 @@ Let's get everything set up first. You'll need to give **ParsePy** your _Applica
 
 ~~~~~ {python}
 >>> import ParsePy
->>> ParsePy.APPLICATION_ID = "your application id"
->>> ParsePy.MASTER_KEY = "your master key here"
+>>> APPLICATION_ID = "your application id"
+>>> REST_API_KEY = "your master key here"
+>>> noti = ParsePy.ParseNotification(APPLICATION_ID, REST_API_KEY)
+>>> obj = ParsePy.ParseObject(APPLICATION_ID, REST_API_KEY, class_name='test')
+>>> query = ParsePy.ParseQuery(APPLICATION_ID, REST_API_KEY, class_name='test')
 ~~~~~
 
 To create a new object of the Parse class _GameScore_:
 
 ~~~~~ {python}
->>> gameScore = ParsePy.ParseObject("GameScore")
+>>> gameScore = ParsePy.ParseObject(APPLICATION_ID, REST_API_KEY, "GameScore")
 >>> gameScore.score = 1337
 >>> gameScore.playerName = "Sean Plott"
 >>> gameScore.cheatMode = False
@@ -72,7 +75,7 @@ If we want to store data in a ParseObject, we should wrap it in a ParseBinaryDat
 We can store a reference to another ParseObject by assigning it to an attribute:
 
 ~~~~~ {python}
->>> collectedItem = ParsePy.ParseObject("CollectedItem")
+>>> collectedItem = ParsePy.ParseObject(APPLICATION_ID, REST_API_KEY, "CollectedItem")
 >>> collectedItem.type = "Sword"
 >>> collectedItem.isAwesome = True
 >>> collectedItem.save() # we have to save it before it can be referenced
@@ -86,13 +89,13 @@ Querying
 To retrieve an object with a Parse class of _GameScore_ and an _objectId_ of _xxwXx9eOec_, run:
 
 ~~~~~ {python}
->>> gameScore = ParsePy.ParseQuery("GameScore").get("xxwXx9eOec")
+>>> gameScore = ParsePy.ParseQuery(APPLICATION_ID, REST_API_KEY, "GameScore").get("xxwXx9eOec")
 ~~~~~
 
 We can also run more complex queries to retrieve a range of objects. For example, if we want to get a list of _GameScore_ objects with scores between 1000 and 2000 ordered by _playerName_, we would call:
 
 ~~~~~ {python}
->>> query = ParsePy.ParseQuery("GameScore")
+>>> query = ParsePy.ParseQuery(APPLICATION_ID, REST_API_KEY, "GameScore")
 >>> query = query.gte("score", 1000).lt("score", 2000).order("playerName")
 >>> GameScores = query.fetch()
 ~~~~~
